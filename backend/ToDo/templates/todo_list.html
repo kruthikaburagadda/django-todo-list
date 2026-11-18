@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List Application</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            letter-spacing: 1px;
+        }
+
+        .add-form {
+            background-color: #ffffff;
+            padding: 24px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .add-form h2 {
+            margin-bottom: 16px;
+            color: #34495e;
+            font-size: 1.1rem;
+        }
+
+        .add-form input[type="text"],
+        .add-form textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #dce1e7;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .add-form input[type="text"]:focus,
+        .add-form textarea:focus {
+            border-color: #3498db;
+        }
+
+        .add-form textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .btn-add {
+            background-color: #3498db;
+            color: white;
+            width: 100%;
+        }
+
+        .btn-add:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-complete {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .btn-complete:hover {
+            background-color: #27ae60;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        .task-list h2 {
+            color: #34495e;
+            margin-bottom: 16px;
+            font-size: 1.1rem;
+        }
+
+        .task-card {
+            background-color: #ffffff;
+            padding: 18px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .task-card.completed {
+            background-color: #eafaf1;
+            border-left: 4px solid #2ecc71;
+        }
+
+        .task-card.pending {
+            border-left: 4px solid #3498db;
+        }
+
+        .task-info {
+            flex: 1;
+        }
+
+        .task-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+
+        .task-card.completed .task-title {
+            text-decoration: line-through;
+            color: #7f8c8d;
+        }
+
+        .task-description {
+            font-size: 0.88rem;
+            color: #7f8c8d;
+        }
+
+        .task-status {
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+
+        .status-done {
+            color: #2ecc71;
+        }
+
+        .status-pending {
+            color: #e67e22;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .no-tasks {
+            text-align: center;
+            color: #95a5a6;
+            padding: 30px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 To-Do List</h1>
+
+        <!-- Add Task Form -->
+        <div class="add-form">
+            <h2>Add New Task</h2>
+            <form method="POST" action="/add/">
+                {% csrf_token %}
+                <input type="text" name="title" placeholder="Task title" required>
+                <textarea name="description" placeholder="Task description (optional)"></textarea>
+                <button type="submit" class="btn btn-add">+ Add Task</button>
+            </form>
+        </div>
+
+        <!-- Task List -->
+        <div class="task-list">
+            <h2>Your Tasks ({{ todos|length }})</h2>
+            {% if todos %}
+                {% for todo in todos %}
+                <div class="task-card {% if todo.completed %}completed{% else %}pending{% endif %}">
+                    <div class="task-info">
+                        <div class="task-title">{{ todo.title }}</div>
+                        {% if todo.description %}
+                        <div class="task-description">{{ todo.description }}</div>
+                        {% endif %}
+                        <div class="task-status">
+                            {% if todo.completed %}
+                                <span class="status-done">✔ Completed</span>
+                            {% else %}
+                                <span class="status-pending">⏳ Pending</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        {% if not todo.completed %}
+                        <form method="POST" action="/complete/{{ todo.id }}/">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-complete">Complete</button>
+                        </form>
+                        {% endif %}
+                        <form method="POST" action="/delete/{{ todo.id }}/">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-delete">Delete</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-tasks">No tasks yet. Add one above!</div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
